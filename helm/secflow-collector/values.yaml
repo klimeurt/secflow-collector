@@ -1,0 +1,10 @@
+github:
+  organization: "your-org-name"
+  tokenSecretName: "github-token"
+
+nats:
+  url: "nats://nats:4222"
+
+cron:
+  schedule: "0 0 * * 0"  # Weekly on Sunday
+  runOnStartup: true     # Run immediately after deployment
