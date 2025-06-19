@@ -68,7 +68,7 @@ Each repository is published to NATS as a JSON message:
 
 ### Prerequisites
 
-- Go 1.21+
+- Go 1.24+
 - Docker
 - NATS server (for testing)
 
