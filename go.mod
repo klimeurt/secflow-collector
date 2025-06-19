@@ -6,7 +6,7 @@ require (
 	github.com/google/go-github/v57 v57.0.0
 	github.com/nats-io/nats.go v1.31.0
 	github.com/robfig/cron/v3 v3.0.1
-	golang.org/x/oauth2 v0.15.0
+	golang.org/x/oauth2 v0.30.0
 )
 
 require (
