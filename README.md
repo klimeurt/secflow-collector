@@ -7,7 +7,7 @@ A Go microservice that periodically scans a GitHub organization's repositories a
 - **Scheduled Scanning**: Uses cron-style scheduling (customizable, defaults to weekly)
 - **GitHub Integration**: Fetches all repositories from a specified organization
 - **NATS Publishing**: Publishes repository information to a NATS queue
-- **Kubernetes Ready**: Deployable via Helm with full Kubernetes support
+- **Container Ready**: Deployable as a Docker container
 - **Secure**: Runs as non-root user, supports security contexts
 - **Configurable**: Environment variable based configuration
 
@@ -102,62 +102,46 @@ go build -o secflow-collectortor main.go
 docker build -t secflow-collector:latest .
 ```
 
-## Kubernetes Deployment
+## Docker Deployment
 
-### Prerequisites
-
-- Kubernetes cluster
-- Helm 3.x
-- NATS deployed in the cluster
-
-### Create GitHub Token Secret
+### Running with Docker
 
 ```bash
-kubectl create secret generic github-token \
-  --from-literal=token=your-github-token
+docker run -d \
+  -e GITHUB_ORG="your-org" \
+  -e GITHUB_TOKEN="your-github-token" \
+  -e NATS_URL="nats://nats:4222" \
+  -e RUN_ON_STARTUP="true" \
+  ghcr.io/klimeurt/secflow-collector:latest
 ```
 
-### Install with Helm
+### Docker Compose
 
-1. Create values file (`my-values.yaml`):
 ```yaml
-github:
-  organization: "your-org-name"
-  tokenSecretName: "github-token"
+version: '3.8'
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
 
-nats:
-  url: "nats://nats:4222"
-
-cron:
-  schedule: "0 0 * * 0"  # Weekly on Sunday
-  runOnStartup: true     # Run immediately after deployment
+  secflow-collector:
+    image: ghcr.io/klimeurt/secflow-collector:latest
+    environment:
+      - GITHUB_ORG=your-org
+      - GITHUB_TOKEN=your-github-token
+      - NATS_URL=nats://nats:4222
+      - RUN_ON_STARTUP=true
+    depends_on:
+      - nats
 ```
-
-2. Install the chart:
-```bash
-helm install secflow-collectortor ./helm/secflow-collector -f my-values.yaml
-```
-
-3. Upgrade deployment:
-```bash
-helm upgrade secflow-collector ./helm/secflow-collector -f my-values.yaml
-```
-
-4. Uninstall:
-```bash
-helm uninstall secflow-collector
-```
-
-### Helm Values Reference
-
-See `helm/secflow-collector/values.yaml` for all available configuration options.
 
 ## Monitoring
 
 The service logs all operations to stdout. You can view logs using:
 
 ```bash
-kubectl logs -f deployment/secflow-collector
+docker logs -f container-name
 ```
 
 ### Log Examples
@@ -175,11 +159,10 @@ kubectl logs -f deployment/secflow-collector
 
 ## Security Considerations
 
-1. **GitHub Token**: Store as Kubernetes secret, never in code
+1. **GitHub Token**: Store securely, never in code or version control
 2. **Non-root User**: Container runs as UID 1000
-3. **Read-only Filesystem**: Enabled by default in Helm chart
+3. **Read-only Filesystem**: Supported for enhanced security
 4. **Network Policies**: Consider implementing to restrict traffic
-5. **RBAC**: ServiceAccount with minimal permissions
 
 ## Testing
 
@@ -204,16 +187,8 @@ go test ./... -tags=integration -v
 ├── go.mod                  # Go module definition
 ├── go.sum                  # Go module checksums
 ├── Dockerfile              # Multi-stage Docker build
-├── README.md               # This file
-└── helm/
-    └── secflow-collector/
-        ├── Chart.yaml      # Helm chart metadata
-        ├── values.yaml     # Default values
-        └── templates/
-            ├── _helpers.tpl
-            ├── deployment.yaml
-            ├── serviceaccount.yaml
-            └── NOTES.txt
+├── Makefile                # Build and development commands
+└── README.md               # This file
 ```
 
 ## Troubleshooting

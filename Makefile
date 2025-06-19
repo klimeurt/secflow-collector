@@ -1,11 +1,10 @@
-.PHONY: build test run docker-build docker-push helm-lint helm-package clean
+.PHONY: build test run docker-build docker-push clean
 
 # Variables
 APP_NAME := secflow-collector
 DOCKER_REGISTRY := ghcr.io/klimeurt
 DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(APP_NAME)
 VERSION := $(shell git describe --tags --always --dirty)
-HELM_CHART := helm/secflow-collector
 
 # Build binary
 build:
@@ -53,13 +52,6 @@ docker-push: docker-build
 	docker push $(DOCKER_IMAGE):$(VERSION)
 	docker push $(DOCKER_IMAGE):latest
 
-# Helm lint
-helm-lint:
-	helm lint $(HELM_CHART)
-
-# Helm package
-helm-package:
-	helm package $(HELM_CHART)
 
 # Install dependencies
 deps:
@@ -82,20 +74,8 @@ dev-teardown:
 	docker rm nats || true
 
 # Full CI pipeline (unit tests only)
-ci: lint test build docker-build helm-lint
+ci: lint test build docker-build
 
 # Full CI pipeline with integration tests
-ci-integration: lint test-all build docker-build helm-lint
+ci-integration: lint test-all build docker-build
 
-# Install to local Kubernetes
-install-local:
-	kubectl create secret generic github-token --from-literal=token=$(GITHUB_TOKEN) || true
-	helm upgrade --install $(APP_NAME) $(HELM_CHART) \
-		--set github.organization=$(GITHUB_ORG) \
-		--set image.repository=$(DOCKER_IMAGE) \
-		--set image.tag=$(VERSION)
-
-# Uninstall from local Kubernetes
-uninstall-local:
-	helm uninstall $(APP_NAME)
-	kubectl delete secret github-token || true

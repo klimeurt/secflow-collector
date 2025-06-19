@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Go microservice called **secflow-collector** that periodically scans a GitHub organization's repositories and publishes them to a NATS queue for further processing. It's a Kubernetes-ready service with cron-based scheduling.
+This is a Go microservice called **secflow-collector** that periodically scans a GitHub organization's repositories and publishes them to a NATS queue for further processing.
 
 ## Development Commands
 
@@ -52,20 +52,6 @@ make docker-build
 make docker-push
 ```
 
-### Kubernetes/Helm Operations
-```bash
-# Lint Helm chart
-make helm-lint
-
-# Package Helm chart
-make helm-package
-
-# Install to local Kubernetes (requires GITHUB_ORG and GITHUB_TOKEN env vars)
-make install-local
-
-# Uninstall from local Kubernetes
-make uninstall-local
-```
 
 ## Architecture
 
@@ -106,24 +92,13 @@ go test -tags=integration -v ./...
 
 ## Deployment
 
-The service is designed for Kubernetes deployment via Helm:
-
-1. **Helm Chart Location**: `helm/secflow-collector/`
-2. **Default Values**: See `helm/secflow-collector/values.yaml`
-3. **Security**: Runs as non-root user (UID 1000), supports read-only filesystem
-
-### Helm Configuration
-The chart expects:
-- GitHub token stored as Kubernetes secret
-- NATS server accessible in cluster
-- Configurable cron schedule and startup behavior
+The service is containerized and can be deployed to any container orchestration platform. The Docker image runs as non-root user (UID 1000) and supports read-only filesystem.
 
 ## Repository Structure
 
 - `main.go` - Single-file application with all logic
 - `Makefile` - Development and deployment commands
 - `Dockerfile` - Multi-stage build for minimal container
-- `helm/secflow-collector/` - Kubernetes Helm chart
 - `go.mod/go.sum` - Go module definitions
 
 ## Message Format
