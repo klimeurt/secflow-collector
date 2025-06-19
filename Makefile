@@ -5,7 +5,7 @@ APP_NAME := secflow-collector
 DOCKER_REGISTRY := your-registry.io
 DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(APP_NAME)
 VERSION := $(shell git describe --tags --always --dirty)
-HELM_CHART := helm/github-repo-scanner
+HELM_CHART := helm/secflow-collector
 
 # Build binary
 build:

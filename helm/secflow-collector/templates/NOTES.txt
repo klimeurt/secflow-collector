@@ -8,10 +8,10 @@ Configuration:
   - Run on Startup: {{ .Values.cron.runOnStartup }}
 
 2. To check the pod status:
-   kubectl get pods -l "app.kubernetes.io/name={{ include "github-repo-scanner.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
+   kubectl get pods -l "app.kubernetes.io/name={{ include "secflow-collector.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
 
 3. To view logs:
-   kubectl logs -f deployment/{{ include "github-repo-scanner.fullname" . }}
+   kubectl logs -f deployment/{{ include "secflow-collector.fullname" . }}
 
 4. Important Notes:
    {{- if not .Values.github.organization }}
@@ -35,4 +35,4 @@ Configuration:
    - Set up consumers to process repository data
    - Configure monitoring/alerting as needed
 
-For more information, visit: https://github.com/example/github-repo-scanner
+For more information, visit: https://github.com/klimeurt/secflow-collector
