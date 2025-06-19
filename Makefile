@@ -11,13 +11,25 @@ HELM_CHART := helm/secflow-collector
 build:
 	go build -ldflags="-w -s -X main.Version=$(VERSION)" -o $(APP_NAME) main.go
 
-# Run tests
+# Run unit tests
 test:
 	go test -v -race ./...
 
-# Run tests with coverage
+# Run unit tests with coverage
 test-coverage:
 	go test -v -race -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+
+# Run integration tests (requires NATS server)
+test-integration:
+	go test -v -race -tags=integration ./...
+
+# Run all tests (unit + integration)
+test-all: test test-integration
+
+# Run tests with coverage including integration tests
+test-coverage-all:
+	go test -v -race -tags=integration -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 # Run locally
@@ -69,8 +81,11 @@ dev-teardown:
 	docker stop nats || true
 	docker rm nats || true
 
-# Full CI pipeline
+# Full CI pipeline (unit tests only)
 ci: lint test build docker-build helm-lint
+
+# Full CI pipeline with integration tests
+ci-integration: lint test-all build docker-build helm-lint
 
 # Install to local Kubernetes
 install-local:
