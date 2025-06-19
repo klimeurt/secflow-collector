@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/google/go-github/v57 v57.0.0
 	github.com/nats-io/nats-server/v2 v2.11.4
-	github.com/nats-io/nats.go v1.42.0
+	github.com/nats-io/nats.go v1.43.0
 	github.com/robfig/cron/v3 v3.0.1
 	golang.org/x/oauth2 v0.15.0
 )
