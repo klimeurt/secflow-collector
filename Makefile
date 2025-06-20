@@ -1,14 +1,21 @@
-.PHONY: build test run docker-build docker-push clean
+.PHONY: build build-collector build-validator test run run-collector run-validator docker-build docker-build-collector docker-build-validator docker-push docker-push-collector docker-push-validator clean
 
 # Variables
-APP_NAME := secflow-collector
+COLLECTOR_NAME := secflow-collector
+VALIDATOR_NAME := secflow-validator
 DOCKER_REGISTRY := ghcr.io/klimeurt
-DOCKER_IMAGE := $(DOCKER_REGISTRY)/$(APP_NAME)
+COLLECTOR_IMAGE := $(DOCKER_REGISTRY)/$(COLLECTOR_NAME)
+VALIDATOR_IMAGE := $(DOCKER_REGISTRY)/$(VALIDATOR_NAME)
 VERSION := $(shell git describe --tags --always --dirty)
 
-# Build binary
-build:
-	go build -ldflags="-w -s -X main.Version=$(VERSION)" -o $(APP_NAME) main.go
+# Build binaries
+build: build-collector build-validator
+
+build-collector:
+	go build -ldflags="-w -s -X main.Version=$(VERSION)" -o $(COLLECTOR_NAME) ./cmd/collector
+
+build-validator:
+	go build -ldflags="-w -s -X main.Version=$(VERSION)" -o $(VALIDATOR_NAME) ./cmd/validator
 
 # Run unit tests
 test:
@@ -32,8 +39,13 @@ test-coverage-all:
 	go tool cover -html=coverage.out -o coverage.html
 
 # Run locally
-run:
-	go run main.go
+run: run-collector
+
+run-collector:
+	go run ./cmd/collector
+
+run-validator:
+	go run ./cmd/validator
 
 # Lint code
 lint:
@@ -44,13 +56,24 @@ fmt:
 	go fmt ./...
 
 # Docker build
-docker-build:
-	docker build -t $(DOCKER_IMAGE):$(VERSION) -t $(DOCKER_IMAGE):latest .
+docker-build: docker-build-collector docker-build-validator
+
+docker-build-collector:
+	docker build -f deployments/collector/Dockerfile -t $(COLLECTOR_IMAGE):$(VERSION) -t $(COLLECTOR_IMAGE):latest .
+
+docker-build-validator:
+	docker build -f deployments/validator/Dockerfile -t $(VALIDATOR_IMAGE):$(VERSION) -t $(VALIDATOR_IMAGE):latest .
 
 # Docker push
-docker-push: docker-build
-	docker push $(DOCKER_IMAGE):$(VERSION)
-	docker push $(DOCKER_IMAGE):latest
+docker-push: docker-push-collector docker-push-validator
+
+docker-push-collector: docker-build-collector
+	docker push $(COLLECTOR_IMAGE):$(VERSION)
+	docker push $(COLLECTOR_IMAGE):latest
+
+docker-push-validator: docker-build-validator
+	docker push $(VALIDATOR_IMAGE):$(VERSION)
+	docker push $(VALIDATOR_IMAGE):latest
 
 
 # Install dependencies
@@ -60,7 +83,7 @@ deps:
 
 # Clean build artifacts
 clean:
-	rm -f $(APP_NAME)
+	rm -f $(COLLECTOR_NAME) $(VALIDATOR_NAME)
 	rm -f coverage.out coverage.html
 	rm -f *.tgz
 
